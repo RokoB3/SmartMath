@@ -13,7 +13,7 @@ The calculator with a brain
 
 st.sidebar.header('Parameters')
 model = st.sidebar.selectbox('Model', ['GPT3', 'Codex'])
-explain = st.sidebar.checkbox('Explain')
+explain = st.sidebar.checkbox('Explain', )
 
 st.sidebar.write("""
 ***

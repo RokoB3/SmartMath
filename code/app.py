@@ -6,7 +6,7 @@ import pandas as pd
 import time
 
 st.write("""
-# I'M SMART MATH V1
+# I'M MR. SMART MATH V1
 The calculator with a brain
 ***
 """)
@@ -24,7 +24,7 @@ st.sidebar.write("""
 
 """)
 
-question = st.text_area("Ask me a question")
+question = st.text_area("Ask me a math question")
 
 
 openai.api_key = os.getenv("OPENAI_API_KEY") 

@@ -1,24 +1,32 @@
-import streamlit
+import streamlit as st
 import os
 import openai
 import json
 import pandas as pd
 import time
-import argparse
-from embedding import get_embeddings, get_most_similar
 
-parser = argparse.ArgumentParser()
-# if an argument is passed in as True, we do it
-parser.add_argument("--Codex")
-parser.add_argument("--Explain")
-parser.add_argument("--GPT3")
-parser.add_argument("--GPT3_CoT")
-parser.add_argument("--Question")
-args = parser.parse_args()
+st.write("""
+# I'M SMART MATH V1
+The calculator with a brain
+***
+""")
+
+st.sidebar.header('Parameters')
+model = st.sidebar.selectbox('Model', ['GPT3', 'Codex'])
+explain = st.sidebar.checkbox('Explain')
+
+st.sidebar.write("""
+***
+### Information \n
+*Models:*\n
+* GPT3: Text based AI model. Great for solving simple numerical problems.
+* Codex: Code based AI model. Great for graphing and complex questions.
+
+""")
+
+question = st.text_area("Ask me a question")
 
 
-
-question = args.Question
 openai.api_key = os.getenv("OPENAI_API_KEY") 
 
 
@@ -43,6 +51,17 @@ explanation_suffix = "\n\n'''\nHere's what the above code is doing:\n1."
 CoT = "Let's think step by step."
 
 
+def clean_answer(answer):
+    lines = answer.splitlines()
+    for line in lines:
+        if line =='':
+            lines.remove(line)
+        else:
+            answer = ''.join(lines)
+            return answer
+
+
+
 def execute_zero_shot(question):
     """
     Runs zero-shot on questions_per questions for each course in courses. 
@@ -52,11 +71,10 @@ def execute_zero_shot(question):
     print("executing zero-shot")
     rows = []
     original_question = question
-    row = [question]
     print('Running Zero-Shot on'+' question '+'...')
     start = time.time()
 
-    if args.Codex == 'True':
+    if model == 'Codex':
         time.sleep(codex_time_delay) #to avoid an openai.error.RateLimitError
         codex_input = docstring_front + context_array[0] + ' ' + prompt_prefix + ' ' + question + docstring_back
         codex_output = openai.Completion.create(engine = codex_engine, 
@@ -64,13 +82,8 @@ def execute_zero_shot(question):
                                                 max_tokens = zero_shot_max_tokens, 
                                                 temperature = engine_temperature, 
                                                 top_p = engine_topP)['choices'][0]['text']
-        row += [codex_input, codex_output, '']
-        print(row)
-        f = open("answer.py", "w")
-        f.write(row[2])
-        f.close()
 
-    if args.Explain == 'True' and args.Codex == 'True':
+    if explain == True and model == 'Codex':
         time.sleep(codex_time_delay) #to avoid an openai.error.RateLimitError
         explanation_input = codex_input + codex_output + explanation_suffix
         explanation_output = openai.Completion.create(engine = codex_engine, 
@@ -78,25 +91,20 @@ def execute_zero_shot(question):
                                                     max_tokens = explanation_max_tokens, 
                                                     temperature = engine_temperature, 
                                                     top_p = engine_topP)['choices'][0]['text']
-        row += [explanation_input, explanation_output]
-        f = open("answer.txt", "w")
-        f.write(row[2] + '\n' + row[3] + '\n' + row[4] + row[5])
-        f.close()
+
         
-    if args.GPT3 == 'True':
+    if model == 'GPT3':
         time.sleep(gpt3_time_delay) #to avoid an openai.error.RateLimitError
         gpt3_output = openai.Completion.create(engine = gpt3_engine, 
                                             prompt = original_question, 
                                             max_tokens = gpt3_max_tokens, 
                                             temperature = engine_temperature, 
                                             top_p = engine_topP)['choices'][0]['text']
-        row += [gpt3_output, '']
-        print(row[1])
-        # f = open("answer.txt", "w")
-        # f.write(row[1])
-        # f.close()
+        gpt3_output = clean_answer(gpt3_output)
+        st.text_area("OUTPUT", gpt3_output)
 
-    if args.GPT3_CoT == 'True':
+
+    if explain == True and model == 'GPT3':
         time.sleep(gpt3_time_delay) #to avoid an openai.error.RateLimitError
         gpt3_CoT_input = 'Q: ' + original_question + "\nA: " + CoT
         gpt3_CoT_output = openai.Completion.create(engine = gpt3_engine,
@@ -104,7 +112,8 @@ def execute_zero_shot(question):
                                             max_tokens = gpt3_CoT_max_tokens,
                                             temperature = engine_temperature,
                                             top_p = engine_topP)['choices'][0]['text']
-        row += [gpt3_CoT_input, gpt3_CoT_output, '']
+        gpt3_CoT_output = clean_answer(gpt3_CoT_output)
+        st.text_area("Explanation", gpt3_CoT_output)
 
     end = time.time()
     print('API call time: ' + str(end-start) + '\n')
@@ -114,4 +123,5 @@ def execute_zero_shot(question):
     # info.to_csv(course_results_location, index=False)
 
 if __name__ == "__main__":
-    execute_zero_shot(question)
+    if question != '':
+        execute_zero_shot(question)

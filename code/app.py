@@ -117,7 +117,7 @@ def execute_zero_shot(question):
 
     end = time.time()
     print('API call time: ' + str(end-start) + '\n')
-    rows.append(row)
+
     # info = pd.DataFrame(rows, columns=column_labels)
     # course_results_location = ' result.csv'
     # info.to_csv(course_results_location, index=False)

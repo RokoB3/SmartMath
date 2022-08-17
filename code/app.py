@@ -58,12 +58,14 @@ CoT = "Let's think step by step."
 
 
 def clean_answer(answer):
-    lines = answer.splitlines()
-    for line in lines:
-        if line =='':
-            lines.remove(line)
+    lines1 = answer.splitlines()
+    lines2 = answer.splitlines()
+    print(lines1)
+    for line in lines1:
+        if line ==' ' or line =='':
+            lines2.remove(lines2[0])
         else:
-            answer = ''.join(lines)
+            answer = '\n'.join(lines2)
             return answer
 
 def format_codex_answer(answer):

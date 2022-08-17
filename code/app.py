@@ -104,7 +104,7 @@ def execute_zero_shot(question):
             from answer import main
             main()
         except:
-            st.text_area("OUTPUT", "Codex unavailable for this question. Reformulate the question or use GPT3.")
+            st.text_area("OUTPUT", "Please run code in a python environment.")
         else:
             script = exec(open("answer.py").read())
             print(script)

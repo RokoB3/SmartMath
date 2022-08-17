@@ -1,3 +1,4 @@
+from logging import raiseExceptions
 import streamlit as st
 import os
 import openai
@@ -6,7 +7,7 @@ import pandas as pd
 import time
 
 st.write("""
-# I'M MR. SMART MATH V1
+# I'M CALLY, SMART MATH V1
 The calculator with a brain
 ***
 """)
@@ -26,7 +27,12 @@ st.sidebar.write("""
 
 question = st.text_area("Ask me a math question")
 
+col1, col2, col3 = st.columns([4,3,1])
 
+with col3:
+    start = st.button("Start")
+
+    
 openai.api_key = os.getenv("OPENAI_API_KEY") 
 
 
@@ -60,6 +66,14 @@ def clean_answer(answer):
             answer = ''.join(lines)
             return answer
 
+def format_codex_answer(answer):
+    first = ["def main():"]
+    lines = answer.splitlines()
+    for i in range(len(lines)):
+        lines[i] = f'   {lines[i]}'   # Add a tab to every line
+    lines = first + lines
+    answer = '\n'.join(lines)
+    return answer
 
 
 def execute_zero_shot(question):
@@ -82,6 +96,21 @@ def execute_zero_shot(question):
                                                 max_tokens = zero_shot_max_tokens, 
                                                 temperature = engine_temperature, 
                                                 top_p = engine_topP)['choices'][0]['text']
+        with open("answer.py", 'w') as f:
+            print("Writing")
+            f.write(format_codex_answer(codex_output))
+        try:
+            from answer import main
+            main()
+        except:
+            st.text_area("OUTPUT", "Codex unavailable for this question. Reformulate the question or use GPT3.")
+        else:
+            
+            script = exec(open("answer.py").read())
+            print(script)
+            st.text_area("OUTPUT", script)
+
+
 
     if explain == True and model == 'Codex':
         time.sleep(codex_time_delay) #to avoid an openai.error.RateLimitError
@@ -91,6 +120,8 @@ def execute_zero_shot(question):
                                                     max_tokens = explanation_max_tokens, 
                                                     temperature = engine_temperature, 
                                                     top_p = engine_topP)['choices'][0]['text']
+        
+
 
         
     if model == 'GPT3':
@@ -123,5 +154,5 @@ def execute_zero_shot(question):
     # info.to_csv(course_results_location, index=False)
 
 if __name__ == "__main__":
-    if question != '':
+    if question != '' and start == True:
         execute_zero_shot(question)

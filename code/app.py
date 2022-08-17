@@ -96,6 +96,7 @@ def execute_zero_shot(question):
                                                 max_tokens = zero_shot_max_tokens, 
                                                 temperature = engine_temperature, 
                                                 top_p = engine_topP)['choices'][0]['text']
+        
         with open("answer.py", 'w') as f:
             print("Writing")
             f.write(format_codex_answer(codex_output))
@@ -105,11 +106,14 @@ def execute_zero_shot(question):
         except:
             st.text_area("OUTPUT", "Codex unavailable for this question. Reformulate the question or use GPT3.")
         else:
-            
             script = exec(open("answer.py").read())
             print(script)
             st.text_area("OUTPUT", script)
-
+        
+        st.text_area("Code", codex_output)
+        st.write("""
+        ##### Please run code in a python environment
+        """)
 
 
     if explain == True and model == 'Codex':
@@ -120,7 +124,8 @@ def execute_zero_shot(question):
                                                     max_tokens = explanation_max_tokens, 
                                                     temperature = engine_temperature, 
                                                     top_p = engine_topP)['choices'][0]['text']
-        
+        explanation_output = clean_answer(explanation_output)
+        st.text_area("Explanation", explanation_output)
 
 
         
